@@ -59,3 +59,39 @@ fn revoke_claim_failed_when_not_owner() {
     })
 }
 
+#[test]
+fn transfer_claim_works() {
+    new_test_ext().execute_with(|| {
+        let claim = vec![1, 16];
+        let _ = PoeModule::create_claim(Origin::signed(100), claim.clone());
+
+        assert_ok!(PoeModule::transfer_claim(Origin::signed(100), claim.clone(), 300));
+    })
+}
+
+#[test]
+fn transfer_claim_failed_when_claim_not_exist() {
+    new_test_ext().execute_with(|| {
+        let claim = vec![1, 16];
+
+        assert_noop!(
+            PoeModule::transfer_claim(Origin::signed(100), claim.clone(), 300),
+            Error::<Test>::ClaimNotExist
+        );
+    })
+}
+
+#[test]
+fn transfer_claim_failed_when_not_owner() {
+    new_test_ext().execute_with(|| {
+        let claim = vec![1, 16];
+
+        let _ = PoeModule::create_claim(Origin::signed(200), claim.clone());
+
+        assert_noop!(
+            PoeModule::transfer_claim(Origin::signed(100), claim.clone(), 300),
+            Error::<Test>::NotClaimOwner
+        );
+    })
+}
+
