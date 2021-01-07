@@ -268,8 +268,14 @@ impl pallet_template::Trait for Runtime {
 	type Event = Event;
 }
 
+
+parameter_types! {
+	pub const MaximumClaimLength: u32 = 128;
+}
+
 impl pallet_poe::Trait for Runtime {
 	type Event = Event;
+	type MaximumClaimLength = MaximumClaimLength;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
