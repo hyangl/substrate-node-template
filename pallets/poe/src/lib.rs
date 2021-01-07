@@ -7,6 +7,12 @@ use frame_system::ensure_signed;
 use sp_std::prelude::*;
 
 
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
 pub trait Trait: frame_system::Trait {
     type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 }
@@ -59,10 +65,28 @@ decl_module! {
         }
 
         #[weight = 0]
-        pub fn revoke_claim(origin, claim: Vec<u8>, dest: T::AccountId) -> dispatch::DispatchResult {
+        pub fn revoke_claim(origin, claim: Vec<u8>) -> dispatch::DispatchResult {
             let sender = ensure_signed(origin)?;
 
-            ensure!(!Proofs::<T>::contains_key(&claim), Error::<T>::ClaimNotExist);
+            ensure!(Proofs::<T>::contains_key(&claim), Error::<T>::ClaimNotExist);
+
+            let (owner, _block_number) = Proofs::<T>::get(&claim);
+
+            ensure!(owner == sender, Error::<T>::NotClaimOwner);
+
+            Proofs::<T>::remove(&claim);
+
+            Self::deposit_event(RawEvent::ClaimRevoked(sender, claim));
+
+            Ok(())
+        }
+
+
+        #[weight = 0]
+        pub fn transfer_claim(origin, claim: Vec<u8>, dest: T::AccountId) -> dispatch::DispatchResult {
+            let sender = ensure_signed(origin)?;
+
+            ensure!(Proofs::<T>::contains_key(&claim), Error::<T>::ClaimNotExist);
 
             let (owner, _block_number) = Proofs::<T>::get(&claim);
 
