@@ -33,6 +33,8 @@ decl_storage! {
 		pub Kitties get(fn kitties): map hasher(blake2_128_concat) T::KittyIndex => Option<Kitty>;
 		pub KittiesCount get(fn kitties_count): T::KittyIndex;
 		pub KittiesOwners get(fn kitties_owners): map hasher(blake2_128_concat) T::KittyIndex => Option<T::AccountId>;
+
+		pub OwnerKitties get(fn owner_kitties): double_map hasher(blake2_128_concat) T::AccountId, hasher(blake2_128_concat) T::KittyIndex => Option<()>;
 	}
 }
 
@@ -91,6 +93,9 @@ decl_module! {
 		    ensure!(owner == sender, Error::<T>::KittyNotOwn);
 		    <KittiesOwners<T>>::insert(kitty_id, to.clone());
 
+            <OwnerKitties<T>>::remove(&sender, kitty_id);
+            <OwnerKitties<T>>::insert(&to, kitty_id, ());
+
 		    Self::deposit_event(RawEvent::Transfer(sender, to, kitty_id));
 		}
 
@@ -143,7 +148,9 @@ impl <T: Trait> Module<T> {
         for i in 0..kitty1_dna.len() {
             new_dna[i] = combine_dna(kitty1_dna[i], kitty2_dna[2], selector[i]);
         }
-        Self::insert_kitty(sender, kitty_id, Kitty(new_dna));
+        Self::insert_kitty(&sender, kitty_id, Kitty(new_dna));
+
+        <OwnerKitties<T>>::insert(&sender, kitty_id, ());
 
         Ok(kitty_id)
     }
@@ -151,6 +158,9 @@ impl <T: Trait> Module<T> {
     fn insert_kitty(owner: &T::AccountId, kitty_id: T::KittyIndex, kitty: Kitty) {
         <Kitties<T>>::insert(kitty_id, kitty);
         <KittiesCount<T>>::put(kitty_id + 1.into());
-        <KittiesOwners<T>>::insert(kitty_id, owner);
+        <KittiesOwners<T>>::insert(kitty_id, owner.clone());
+
+        <OwnerKitties<T>>::insert(owner, kitty_id, ());
     }
+
 }
