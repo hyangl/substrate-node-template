@@ -280,10 +280,12 @@ impl pallet_poe::Trait for Runtime {
 	type MaximumClaimLength = MaximumClaimLength;
 }
 
-
+pub type KittyIndex = u32;
 impl pallet_kitties::Trait for Runtime {
 	type Event = Event;
 	type Randomness = RandomnessCollectiveFlip;
+
+	type KittyIndex = KittyIndex;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
