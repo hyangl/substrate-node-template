@@ -281,11 +281,19 @@ impl pallet_poe::Trait for Runtime {
 }
 
 pub type KittyIndex = u32;
+
+parameter_types! {
+	pub const KittyReserve: u64 = 40000;
+}
+
 impl pallet_kitties::Trait for Runtime {
 	type Event = Event;
 	type Randomness = RandomnessCollectiveFlip;
 
 	type KittyIndex = KittyIndex;
+
+	type Currency = Balances;
+	type KittyReserve = KittyReserve;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.

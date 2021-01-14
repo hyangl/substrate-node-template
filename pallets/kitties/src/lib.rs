@@ -2,7 +2,7 @@
 
 use codec::{Encode, Decode};
 
-use frame_support::{decl_module, decl_storage, decl_event, decl_error, ensure, Parameter, StorageValue, StorageMap, traits::Randomness};
+use frame_support::{decl_module, decl_storage, decl_event, decl_error, ensure, Parameter, StorageValue, StorageMap, traits::{Randomness, Get, Currency, ReservableCurrency}};
 use frame_system::ensure_signed;
 use sp_io::hashing::blake2_128;
 use sp_runtime::{DispatchError, traits::{AtLeast32BitUnsigned, Bounded, Member, MaybeSerialize, MaybeDisplay}};
@@ -16,6 +16,8 @@ mod tests;
 #[derive(Encode, Decode)]
 pub struct Kitty (pub [u8; 16]);
 
+
+
 /// Configure the pallet by specifying the parameters and types on which it depends.
 pub trait Trait: frame_system::Trait {
     /// Because this pallet emits events, it depends on the runtime's definition of an event.
@@ -24,7 +26,13 @@ pub trait Trait: frame_system::Trait {
     type Randomness: Randomness<Self::Hash>;
 
     type KittyIndex: Parameter + Member + MaybeSerialize + Default + MaybeDisplay + AtLeast32BitUnsigned + Copy;
+
+    type KittyReserve: Get<BalanceOf<Self>>;
+    type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 }
+
+
+type BalanceOf<T> = <<T as Trait>::Currency as Currency<<T as frame_system::Trait>::AccountId>>::Balance;
 
 // The pallet's runtime storage items.
 // https://substrate.dev/docs/en/knowledgebase/runtime/storage
@@ -64,6 +72,7 @@ decl_error! {
 		KittyNotOwn,
 		InvalidKittyId,
 		RequireDifferentParent,
+		ReservedError,
 	}
 }
 
@@ -82,6 +91,9 @@ decl_module! {
 		pub fn create(origin) {
 		    let sender = ensure_signed(origin)?;
 		    let kitty_id = Self::next_kitty_id()?;
+
+		    T::Currency::reserve(&sender, T::KittyReserve::get()).map_err(|_| Error::<T>::ReservedError )?;
+
 		    let dna = Self::random_value(&sender);
 		    let kitty = Kitty(dna);
 
@@ -95,6 +107,10 @@ decl_module! {
 		    let owner = Self::kitties_owners(kitty_id).ok_or(Error::<T>::InvalidKittyId)?;
 
 		    ensure!(owner == sender, Error::<T>::KittyNotOwn);
+
+		    T::Currency::reserve(&to, T::KittyReserve::get()).map_err(|_| Error::<T>::ReservedError )?;
+			T::Currency::unreserve(&sender, T::KittyReserve::get());
+
 		    <KittiesOwners<T>>::insert(kitty_id, to.clone());
 
             <OwnerKitties<T>>::remove(&sender, kitty_id);
