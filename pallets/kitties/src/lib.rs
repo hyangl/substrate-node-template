@@ -35,6 +35,10 @@ decl_storage! {
 		pub KittiesOwners get(fn kitties_owners): map hasher(blake2_128_concat) T::KittyIndex => Option<T::AccountId>;
 
 		pub OwnerKitties get(fn owner_kitties): double_map hasher(blake2_128_concat) T::AccountId, hasher(blake2_128_concat) T::KittyIndex => Option<()>;
+
+        pub KittiesParents get(fn kitties_parents): map hasher(blake2_128_concat) T::KittyIndex => Option<(T::KittyIndex, T::KittyIndex)>;
+		pub KittiesChildren get(fn kitties_children): double_map hasher(blake2_128_concat) T::KittyIndex, hasher(blake2_128_concat) T::KittyIndex => Option<()>;
+		pub KittiesBreed get(fn kitties_breed): double_map hasher(blake2_128_concat) T::KittyIndex, hasher(blake2_128_concat) T::KittyIndex => Option<()>;
 	}
 }
 
@@ -151,6 +155,12 @@ impl <T: Trait> Module<T> {
         Self::insert_kitty(&sender, kitty_id, Kitty(new_dna));
 
         <OwnerKitties<T>>::insert(&sender, kitty_id, ());
+
+        <KittiesParents<T>>::insert(kitty_id, (kitty_id_1, kitty_id_2));
+        <KittiesChildren<T>>::insert(kitty_id_1, kitty_id, ());
+        <KittiesChildren<T>>::insert(kitty_id_2, kitty_id, ());
+        <KittiesBreed<T>>::insert(kitty_id_1, kitty_id_2, ());
+        <KittiesBreed<T>>::insert(kitty_id_2, kitty_id_1, ());
 
         Ok(kitty_id)
     }
