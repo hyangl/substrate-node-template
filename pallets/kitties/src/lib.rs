@@ -122,6 +122,12 @@ decl_module! {
         #[weight = 0]
 		pub fn breed(origin, kitty_id_1: T::KittyIndex, kitty_id_2: T::KittyIndex) {
 		    let sender = ensure_signed(origin)?;
+		    let owner = Self::kitties_owners(kitty_id_1).ok_or(Error::<T>::InvalidKittyId)?;
+		    ensure!(owner == sender, Error::<T>::KittyNotOwn);
+
+		    let owner = Self::kitties_owners(kitty_id_2).ok_or(Error::<T>::InvalidKittyId)?;
+		    ensure!(owner == sender, Error::<T>::KittyNotOwn);
+
 		    let new_kitty_id = Self::do_breed(&sender, kitty_id_1, kitty_id_2)?;
 
 		    Self::deposit_event(RawEvent::Breed(sender, new_kitty_id, kitty_id_1, kitty_id_2));

@@ -48,7 +48,7 @@ fn kitty_transfer_works() {
 	new_test_ext().execute_with(|| {
 		run_to_block(10);
 
-		KittyModule::create(Origin::signed(1));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
 
 		assert_ok!(KittyModule::transfer(Origin::signed(1), 2, 0));
 
@@ -70,7 +70,7 @@ fn kitty_transfer_invalid_id() {
 	new_test_ext().execute_with(|| {
 		run_to_block(10);
 
-		KittyModule::create(Origin::signed(1));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
 
 		assert_noop!(
 			KittyModule::transfer(Origin::signed(1), 2, 1),
@@ -84,7 +84,7 @@ fn kitty_transfer_not_own() {
 	new_test_ext().execute_with(|| {
 		run_to_block(10);
 
-		KittyModule::create(Origin::signed(1));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
 
 		assert_noop!(
 			KittyModule::transfer(Origin::signed(3), 2, 0),
@@ -99,7 +99,7 @@ fn kitty_transfer_reserve_error() {
 	new_test_ext().execute_with(|| {
 		run_to_block(10);
 
-		KittyModule::create(Origin::signed(1));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
 
 		assert_noop!(
 			KittyModule::transfer(Origin::signed(1), 4, 0),
@@ -114,8 +114,8 @@ fn kitty_breed_works() {
 	new_test_ext().execute_with(|| {
 		run_to_block(10);
 
-		KittyModule::create(Origin::signed(1));
-		KittyModule::create(Origin::signed(1));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
 
 		assert_ok!(KittyModule::breed(Origin::signed(1), 0, 1));
 
@@ -145,8 +145,8 @@ fn kitty_breed_reserve_error() {
 	new_test_ext().execute_with(|| {
 		run_to_block(10);
 
-		KittyModule::create(Origin::signed(3));
-		KittyModule::create(Origin::signed(3));
+		assert_ok!(KittyModule::create(Origin::signed(3)));
+		assert_ok!(KittyModule::create(Origin::signed(3)));
 
 		assert_noop!(
 			KittyModule::breed(Origin::signed(3), 0, 1),
@@ -160,12 +160,47 @@ fn kitty_breed_different_parent() {
 	new_test_ext().execute_with(|| {
 		run_to_block(10);
 
-		KittyModule::create(Origin::signed(1));
-		KittyModule::create(Origin::signed(1));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
 
 		assert_noop!(
-			KittyModule::breed(Origin::signed(3), 1, 1),
+			KittyModule::breed(Origin::signed(1), 1, 1),
 			Error::<Test>::RequireDifferentParent
+		);
+	})
+}
+
+#[test]
+fn kitty_breed_not_own() {
+	new_test_ext().execute_with(|| {
+		run_to_block(10);
+
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		assert_ok!(KittyModule::create(Origin::signed(2)));
+
+		assert_noop!(
+			KittyModule::breed(Origin::signed(1), 0, 1),
+			Error::<Test>::KittyNotOwn
+		);
+
+		assert_noop!(
+			KittyModule::breed(Origin::signed(2), 0, 1),
+			Error::<Test>::KittyNotOwn
+		);
+	})
+}
+
+#[test]
+fn kitty_breed_invalid_id() {
+	new_test_ext().execute_with(|| {
+		run_to_block(10);
+
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+		assert_ok!(KittyModule::create(Origin::signed(1)));
+
+		assert_noop!(
+			KittyModule::breed(Origin::signed(1), 0, 3),
+			Error::<Test>::InvalidKittyId
 		);
 	})
 }
