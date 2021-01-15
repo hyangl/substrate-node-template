@@ -159,6 +159,8 @@ impl <T: Trait> Module<T> {
 
         ensure!(kitty_id_1 != kitty_id_2, Error::<T>::RequireDifferentParent);
 
+        T::Currency::reserve(&sender, T::KittyReserve::get()).map_err(|_| Error::<T>::ReservedError)?;
+
         let kitty_id = Self::next_kitty_id()?;
         let kitty1_dna = kitty1.0;
         let kitty2_dna = kitty2.0;
