@@ -68,8 +68,8 @@ runtime-benchmarks = [
     'frame-system/runtime-benchmarks',
     'pallet-balances/runtime-benchmarks',
     'pallet-timestamp/runtime-benchmarks',
-    'sp-runtime/runtime-benchmarks',
     "pallet-template/runtime-benchmarks",
+    'sp-runtime/runtime-benchmarks',
 ]
 std = [
     'codec/std',
