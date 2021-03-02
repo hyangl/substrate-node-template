@@ -21,6 +21,7 @@ benchmarks! {
         let value = Something::get();
         assert_eq!(value, b.into());
     }
+}
 
 #[cfg(test)]
 mod tests {
@@ -35,4 +36,4 @@ mod tests {
         });
     }
 }
-}
+
